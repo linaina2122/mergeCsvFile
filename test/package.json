@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "csv": "^6.3.10",
+    "papaparse": "^5.4.1",
+    "sqlite3": "^5.1.7"
+  }
+}
