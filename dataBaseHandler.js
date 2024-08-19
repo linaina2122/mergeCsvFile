@@ -1,5 +1,5 @@
 const { Sequelize, Model, DataTypes } = require('sequelize');
-const sequelize = new Sequelize('statistics',
+const sequelize = new Sequelize('planstatistics',
     'hcharef',
     'Linaina@1998',
     {
