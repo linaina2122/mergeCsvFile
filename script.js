@@ -91,9 +91,9 @@ async function firstFill() {
   } catch (error) {
     console.error("error occured:", error);
   }
-  await fs.writeFile(process.argv[2], '', {encoding:"utf-8"}, (err)=>{
-    console.log("file writed successfuly");
-  });
+  // await fs.writeFile(process.argv[2], '', {encoding:"utf-8"}, (err)=>{
+  //   console.log("file writed successfuly");
+  // });
 }
 
 async function main(){
