@@ -53,4 +53,4 @@ async function connectToDb( ) {
     }
 }
 
-module.exports = {connectToDb, PlanStatistics};
+module.exports = {connectToDb, PlanStatistics, sequelize};

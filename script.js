@@ -1,7 +1,5 @@
-
 const fs = require("fs");
-const { connectToDb, PlanStatistics
- } = require("./dataBaseHandler");
+const { connectToDb, PlanStatistics, sequelize} = require("./dataBaseHandler");
 var buffer = "";
 
 function ReadFromFile(file) {
@@ -85,8 +83,7 @@ async function FillDb() {
 
 
 
-async function main() {
-  
+async function firstFill() {
   try {
     await connectToDb(); 
     await AllDb(process.argv);
@@ -94,6 +91,13 @@ async function main() {
   } catch (error) {
     console.error("error occured:", error);
   }
+  await fs.writeFile(process.argv[2], '', {encoding:"utf-8"}, (err)=>{
+    console.log("file writed successfuly");
+  });
+}
+
+async function main(){
+   await firstFill();
 }
 
 main();
