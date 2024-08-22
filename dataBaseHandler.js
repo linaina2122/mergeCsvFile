@@ -1,6 +1,11 @@
 const { Sequelize, Model, DataTypes } = require('sequelize');
-const sequelize = new Sequelize('planstatistics',
-   
+const sequelize = new Sequelize('Statistics',
+    'hcharef',
+    'Linaina@1998',
+    {
+        host: 'localhost',
+        dialect: 'mysql',
+    }
 );
 
 class PlanStatistics extends Model{}
