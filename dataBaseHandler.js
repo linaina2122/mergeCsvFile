@@ -1,5 +1,5 @@
 const { Sequelize, Model, DataTypes } = require('sequelize');
-const sequelize = new Sequelize('Statistics',
+const sequelize = new Sequelize('statistics',
     'hcharef',
     'Linaina@1998',
     {
@@ -8,8 +8,8 @@ const sequelize = new Sequelize('Statistics',
     }
 );
 
-class PlanStatistics extends Model{}
-PlanStatistics.init(
+class planstatistics  extends Model{}
+planstatistics .init(
     {
         VarName : {
             type:DataTypes.TEXT,
@@ -33,7 +33,7 @@ PlanStatistics.init(
         }
     }, {
     sequelize, 
-    modelName: 'PlanStatistics',
+    modelName: 'planstatistics ',
     timestamps:false,
 });
 async function connectToDb( ) {
@@ -46,11 +46,11 @@ async function connectToDb( ) {
     }
     try{
         await sequelize.sync({alter:true})
-        console.log("The table for the PlanStatistics model was just (re)created")
+        console.log("The table for the planstatistics  model was just (re)created")
     }
     catch(error){
         console.log("couldn't create")
     }
 }
 
-module.exports = {connectToDb, PlanStatistics, sequelize};
+module.exports = {connectToDb, planstatistics , sequelize};

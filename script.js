@@ -1,5 +1,6 @@
-const fs = require("fs");
-const { connectToDb, PlanStatistics, sequelize} = require("./dataBaseHandler");
+const fs = require('fs')
+
+const { connectToDb, planstatistics, sequelize } = require("./dataBaseHandler");
 var buffer = "";
 
 function ReadFromFile(file) {
@@ -42,23 +43,30 @@ async function AllDb(args) {
     else
       continue;
   }
-  if(index === false){
+  if (index === false) {
     console.log("csv files not found");
     process.exit()
   }
 }
 
-async function FillDb() {
+async function FillArr() {
   let array2d = [];
   var i = 0;
-  var data = [];
-  let tmp;
   array2d = buffer.split('\n');
-
   while (i < array2d.length) {
     array2d[i] = array2d[i].split(';')
-    
-    var j = 0;
+    i++;
+  }
+  return (array2d)
+}
+
+async function FillDb() {
+  var data = [];
+  let tmp;
+  var array2d = await FillArr();
+  var i = await FindLastLine() + 1;
+  while (i < array2d.length) {
+    var j = 0; 
     while (j < array2d[i].length) {
       tmp = {
         VarName: array2d[i][j++],
@@ -69,35 +77,61 @@ async function FillDb() {
       };
     }
     data.push(tmp);
-
     i++;
   }
-    try {
-      await PlanStatistics.bulkCreate(data);
-      console.log("Data saved successfully");
-    } catch (error) {
-        console.error("Error while saving data:", error);
-      }
+  try {
+    await planstatistics.bulkCreate(data);
+    console.log("Data saved successfully");
+  } catch (error) {
+    console.error("Error while saving data:", error);
   }
+}
 
-
-
+async function FindLastLine() {
+  var array2d = await FillArr();
+  var count = await planstatistics.count();
+  var tmp = [];
+  if (count > 0) {
+    const allEntries = await planstatistics.findAll();
+    const lastLine = allEntries[allEntries.length - 1];
+    tmp = [
+      lastLine.VarName,
+      lastLine.Time_string,
+      lastLine.VarValue,
+      lastLine.Validity,
+      lastLine.Time_ms
+    ];
+    for (var i = 0; i < array2d.length; i++) {
+      {
+        var flag = false;
+        for (var s = 0; s < (array2d[i].length); s++) {
+          if (tmp[s] === array2d[i][s].trim())
+              flag =true;
+          else{
+            flag = false;
+            break;
+           }
+          }
+          if(flag)
+            return(i);
+      }
+    }
+  }
+  return(-1)
+}
 
 async function firstFill() {
   try {
-    await connectToDb(); 
+    await connectToDb();
     await AllDb(process.argv);
     await FillDb();
   } catch (error) {
-    console.error("error occured:", error);
+    console.error("error:", error);
   }
-  // await fs.writeFile(process.argv[2], '', {encoding:"utf-8"}, (err)=>{
-  //   console.log("file writed successfuly");
-  // });
-}
+};
 
-async function main(){
-   await firstFill();
+async function main() {
+  await firstFill();
 }
 
 main();
