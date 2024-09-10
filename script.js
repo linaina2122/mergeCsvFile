@@ -1,31 +1,17 @@
 const fs = require('fs')
+const readline = require('readline')
 
+var arr = [];
 const { connectToDb, planstatistics, sequelize } = require("./dataBaseHandler");
-var buffer = "";
-
-function ReadFromFile(file) {
-  return new Promise((resolve, reject) => {
-    const src = fs.createReadStream(file, { encoding: "utf-8" })
-    src.on("data", (chunck) => {
-      if (!buffer) {
-        const index = chunck.indexOf("\n") + 1;
-        buffer += chunck.slice(index);
-      }
-      else
-        buffer += chunck;
-    })
-    src.on("end", () => {
-      console.log("---------no more data to read---------")
-      resolve(buffer);
-    })
-    src.on("close", () => {
-      console.log("*********flux is closed")
-    })
-    src.on("error", (error) => {
-      console.log("error while reading file", error);
-      reject();
-    })
-  })
+async function ReadFromFile(file) {
+  const src = fs.createReadStream(file, { encoding: "utf-8" });
+  const rl = readline.createInterface({
+      input: src,
+      crlfDelay: Infinity
+  });
+  for await (const line of rl) 
+      arr.push(line.split(';'));
+  console.log("end");
 }
 
 async function AllDb(args) {
@@ -35,6 +21,7 @@ async function AllDb(args) {
       index = true;
       try {
         await ReadFromFile(file);
+        await FillDb(arr)
       }
       catch (error) {
         console.error("error", error)
@@ -49,31 +36,18 @@ async function AllDb(args) {
   }
 }
 
-async function FillArr() {
-  let array2d = [];
-  var i = 0;
-  array2d = buffer.split('\n');
-  while (i < array2d.length) {
-    array2d[i] = array2d[i].split(';')
-    i++;
-  }
-  return (array2d)
-}
-
-async function FillDb() {
+async function FillDb(arr){
   var data = [];
-  let tmp;
-  var array2d = await FillArr();
-  var i = await FindLastLine() + 1;
-  while (i < array2d.length) {
+  var i = await FindLastLine(arr) + 1;
+  while (i < arr.length - 1) {
     var j = 0; 
-    while (j < array2d[i].length) {
+    while (j < 5) {
       tmp = {
-        VarName: array2d[i][j++],
-        Time_string: array2d[i][j++],
-        VarValue: array2d[i][j++],
-        Validity: array2d[i][j++],
-        Time_ms: array2d[i][j++]
+        VarName: arr[i][j++],
+        Time_string: arr[i][j++],
+        VarValue: arr[i][j++],
+        Validity: arr[i][j++],
+        Time_ms: arr[i][j++]
       };
     }
     data.push(tmp);
@@ -87,44 +61,37 @@ async function FillDb() {
   }
 }
 
-async function FindLastLine() {
-  var array2d = await FillArr();
-  var count = await planstatistics.count();
-  var tmp = [];
-  if (count > 0) {
-    const allEntries = await planstatistics.findAll();
-    const lastLine = allEntries[allEntries.length - 1];
-    tmp = [
-      lastLine.VarName,
-      lastLine.Time_string,
-      lastLine.VarValue,
-      lastLine.Validity,
-      lastLine.Time_ms
+async function FindLastLine(array) {
+
+  const lastEntry = await planstatistics.findOne({
+    order: [['id', 'DESC']],  
+    attributes: ['VarName', 'Time_string', 'VarValue', 'Validity', 'Time_ms'], 
+    raw: true
+  });
+  if(!lastEntry)
+      return(-1)
+  let lastEntryArray = [];
+
+  if (lastEntry) {
+    lastEntryArray = [
+      lastEntry.VarName,
+      lastEntry.Time_string,
+      lastEntry.VarValue,
+      lastEntry.Validity,
+      lastEntry.Time_ms
     ];
-    for (var i = 0; i < array2d.length; i++) {
-      {
-        var flag = false;
-        for (var s = 0; s < (array2d[i].length); s++) {
-          if (tmp[s] === array2d[i][s].trim())
-              flag =true;
-          else{
-            flag = false;
-            break;
-           }
-          }
-          if(flag)
-            return(i);
-      }
-    }
   }
-  return(-1)
+  const index = arr.findIndex(line => 
+    line.length === lastEntryArray.length &&
+    line.every((value, index) => value === lastEntryArray[index])
+  );
+  return(index)
 }
 
 async function firstFill() {
   try {
     await connectToDb();
     await AllDb(process.argv);
-    await FillDb();
   } catch (error) {
     console.error("error:", error);
   }
